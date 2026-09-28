@@ -1,7 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { api } from '../api.js';
 
-export default function Terminal({ player, onPlayerUpdate }) {
+function createCommandId() {
+  const randomUUID = globalThis.crypto?.randomUUID;
+  if (typeof randomUUID === 'function') return randomUUID.call(globalThis.crypto);
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+export default function Terminal({ player, event, onPlayerUpdate, onEventUpdate, onConnectionLost }) {
   const [history, setHistory] = useState([
     {
       type: 'system',
@@ -69,11 +75,13 @@ export default function Terminal({ player, onPlayerUpdate }) {
     setBusy(true);
 
     try {
+      const commandId = createCommandId();
       const {
         output,
-        events,
-        player: updated
-      } = await api.sendCommand(player.id, trimmed);
+        events = [],
+        player: updated,
+        event: updatedEvent
+      } = await api.sendCommand(trimmed, commandId);
 
       // Handle clear command
       if (events.includes('CLEAR_SCREEN')) {
@@ -92,8 +100,12 @@ export default function Terminal({ player, onPlayerUpdate }) {
 
       // Update player state
       onPlayerUpdate(updated);
+      if (updatedEvent) onEventUpdate(updatedEvent);
 
     } catch (err) {
+      if (err.data?.player) onPlayerUpdate(err.data.player);
+      if (err.data?.event) onEventUpdate(err.data.event);
+      if (!err.status) onConnectionLost?.();
       setHistory((h) => [
         ...h,
         {
@@ -165,7 +177,7 @@ export default function Terminal({ player, onPlayerUpdate }) {
         </div>
 
         <span className="terminal-title">
-          /mnt/recovered-drive/ghost-system
+          /mnt/recovered-drive/zero-node 
         </span>
 
         <span
@@ -173,7 +185,7 @@ export default function Terminal({ player, onPlayerUpdate }) {
             busy ? 'busy' : ''
           }`}
         >
-          {busy ? 'syncing' : 'online'}
+          {event?.state === 'PAUSED' ? 'paused' : busy ? 'syncing' : 'online'}
         </span>
       </div>
 
@@ -191,7 +203,7 @@ export default function Terminal({ player, onPlayerUpdate }) {
               {line.type === 'input' ? (
                 <>
                   <span className="prompt">
-                    guest@ghost-system:{line.cwd}$
+                    operator@zero-node:/$:{line.cwd}$
                   </span>{' '}
                   {line.text}
                 </>

@@ -13,8 +13,7 @@ export default function Leaderboard({ onClose }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api
-      .getLeaderboard()
+    api.getLeaderboard()
       .then((data) => setRows(data.leaderboard))
       .finally(() => setLoading(false));
   }, []);
@@ -27,7 +26,7 @@ export default function Leaderboard({ onClose }) {
             <span className="panel-kicker">network record</span>
             <h2>Leaderboard</h2>
           </div>
-          <button onClick={onClose} aria-label="Close leaderboard">x</button>
+          {onClose && <button onClick={onClose} aria-label="Close leaderboard">x</button>}
         </div>
         {loading ? (
           <p className="modal-loading">Loading records...</p>

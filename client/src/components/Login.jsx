@@ -1,22 +1,33 @@
+
 import React, { useState } from 'react';
 import { api } from '../api.js';
+import '../style/login.css';
 
 export default function Login({ onLogin }) {
-  const [name, setName] = useState('');
+  const [rollNo, setRollNo] = useState('');
+  const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
-  async function submit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    if (!name.trim()) return;
+
+    if (!rollNo.trim() || !pin) {
+      setError('Roll number and access PIN are required.');
+      return;
+    }
+
     setBusy(true);
     setError('');
+
     try {
-      const { player } = await api.registerPlayer(name.trim());
-      localStorage.setItem('ht_player_id', player.id);
-      onLogin(player);
+      const data = await api.login(rollNo.trim(), pin);
+
+      if (onLogin) {
+        onLogin(data);
+      }
     } catch (err) {
-      setError(err.message);
+      setError(err?.message || 'Authentication failed.');
     } finally {
       setBusy(false);
     }
@@ -24,56 +35,109 @@ export default function Login({ onLogin }) {
 
   return (
     <div className="login-screen">
-      <main className="login-console">
-        <section className="login-box">
-          <div className="login-box-top">
-            <span className="login-led" />
-            <span>dead man's switch</span>
+      <div className="login-container">
+
+        {/* Header */}
+        <div className="login-header">
+          <div className="login-brand">
+            <span className="login-brand-mark">TZ</span>
+
+            <div>
+              <div className="login-brand-title">
+                TERMINAL ZERO
+              </div>
+
+              <div className="login-brand-subtitle">
+                SECURE ACCESS NODE
+              </div>
+            </div>
           </div>
-          <pre className="ascii-title">
-{`  _   _    _    ____ _  _______ ____  ____  
- | | | |  / \\  / ___| |/ / ____|  _ \\/ ___| 
- | |_| | / _ \\| |   | ' /|  _| | |_) \\___ \\ 
- |  _  |/ ___ \\ |___| . \\| |___|  _ < ___) |
- |_| |_/_/   \\_\\____|_|\\_\\_____|_| \\_\\____/ 
-`}
-          </pre>
-          <p className="login-copy">
-            Unknown operator detected. Identify yourself to open the recovered shell.
+
+          <div className="login-status">
+            <span className="login-status-dot" />
+            SYSTEM ONLINE
+          </div>
+        </div>
+
+        {/* Login content */}
+        <div className="login-content">
+
+          <div className="login-kicker">
+            AUTHENTICATION // NODE-01
+          </div>
+
+          <h1>ACCESS REQUIRED</h1>
+
+          <p className="login-description">
+            Authenticate to access the Terminal Zero system.
           </p>
-          <form onSubmit={submit}>
+
+          <form onSubmit={handleSubmit}>
+
+            {/* Roll number */}
             <label>
-              <span>operator name</span>
+              ROLL NUMBER
+
               <input
-                autoFocus
-                placeholder="enter a name"
-                value={name}
-                maxLength={40}
-                onChange={(e) => setName(e.target.value)}
+                type="text"
+                value={rollNo}
+                onChange={(e) => setRollNo(e.target.value)}
+                placeholder="Enter roll number"
+                autoComplete="username"
+                disabled={busy}
               />
             </label>
-            <button type="submit" disabled={busy}>
-              {busy ? 'connecting...' : 'connect'}
-            </button>
-          </form>
-          {error && <p className="login-error">{error}</p>}
-        </section>
 
-        <aside className="login-dossier" aria-label="Session dossier">
-          <div>
-            <span className="dossier-label">case</span>
-            <strong>Project CHRYSALIS</strong>
+            {/* PIN */}
+            <label>
+              ACCESS PIN
+
+              <input
+                type="password"
+                value={pin}
+                onChange={(e) => setPin(e.target.value)}
+                placeholder="Enter access PIN"
+                autoComplete="current-password"
+                disabled={busy}
+              />
+            </label>
+
+            {/* Error */}
+            {error && (
+              <div className="login-error">
+                &gt; {error}
+              </div>
+            )}
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={busy}
+            >
+              <span>&gt;_</span>
+
+              {busy
+                ? 'AUTHENTICATING...'
+                : 'AUTHENTICATE'}
+            </button>
+
+          </form>
+
+          {/* Connection status */}
+          <div className="login-footer-status">
+            <span>●</span>
+            ENCRYPTED CONNECTION
           </div>
-          <div>
-            <span className="dossier-label">source</span>
-            <strong>K. Ashworth drive</strong>
-          </div>
-          <div>
-            <span className="dossier-label">status</span>
-            <strong>air-gapped relay live</strong>
-          </div>
-        </aside>
-      </main>
+
+        </div>
+
+        {/* Footer */}
+        <div className="login-bottom">
+          <span>TERMINAL ZERO</span>
+          <span>AUTHORIZED PARTICIPANTS ONLY</span>
+        </div>
+
+      </div>
     </div>
   );
 }

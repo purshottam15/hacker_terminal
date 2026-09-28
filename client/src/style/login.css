@@ -1,0 +1,464 @@
+
+.login-screen {
+  min-height: 100vh;
+  width: 100%;
+  display: grid;
+  place-items: center;
+  padding: 30px;
+
+  position: relative;
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 50% 45%,
+      rgba(70, 180, 220, 0.08),
+      transparent 45%
+    ),
+    #06090a;
+
+  color: var(--text);
+}
+
+/* subtle terminal grid */
+
+.login-screen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background:
+    linear-gradient(
+      rgba(123, 220, 255, 0.025) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(123, 220, 255, 0.025) 1px,
+      transparent 1px
+    );
+
+  background-size: 64px 64px;
+
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* subtle scanlines */
+
+.login-screen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(255,255,255,0.018) 0px,
+      rgba(255,255,255,0.018) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   CONTAINER
+   ========================================================= */
+
+.login-container {
+  position: relative;
+  z-index: 2;
+
+  width: min(520px, 100%);
+
+  border: 1px solid rgba(123, 220, 255, 0.18);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(123, 220, 255, 0.035),
+      transparent 30%
+    ),
+    rgba(9, 14, 15, 0.94);
+
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.55),
+    inset 0 1px rgba(255, 255, 255, 0.05);
+
+  border-radius: 8px;
+
+  overflow: hidden;
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.login-header {
+  min-height: 70px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 14px 18px;
+
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+
+  background: rgba(4, 8, 9, 0.7);
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.login-brand-mark {
+  width: 38px;
+  height: 38px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid rgba(123, 220, 255, 0.35);
+
+  border-radius: 6px;
+
+  color: var(--cyan);
+
+  font-family:
+    "SFMono-Regular",
+    Consolas,
+    monospace;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  background: rgba(123, 220, 255, 0.04);
+}
+
+.login-brand-title {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.login-brand-subtitle {
+  margin-top: 2px;
+
+  color: var(--muted);
+
+  font-size: 10px;
+
+  letter-spacing: 0.1em;
+}
+
+/* status */
+
+.login-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  color: var(--muted);
+
+  font-family:
+    "SFMono-Regular",
+    Consolas,
+    monospace;
+
+  font-size: 10px;
+}
+
+.login-status-dot {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+
+  background: var(--green);
+
+  box-shadow:
+    0 0 8px rgba(92,255,157,0.7);
+}
+
+/* =========================================================
+   CONTENT
+   ========================================================= */
+
+.login-content {
+  padding: 34px 36px 30px;
+}
+
+.login-kicker {
+  margin-bottom: 12px;
+
+  color: var(--cyan);
+
+  font-family:
+    "SFMono-Regular",
+    Consolas,
+    monospace;
+
+  font-size: 10px;
+
+  letter-spacing: 0.12em;
+}
+
+.login-content h1 {
+  margin: 0;
+
+  color: var(--text);
+
+  font-family:
+    "SFMono-Regular",
+    Consolas,
+    monospace;
+
+  font-size: 30px;
+
+  letter-spacing: 0.03em;
+}
+
+.login-description {
+  margin: 10px 0 28px;
+
+  color: var(--muted);
+
+  font-size: 13px;
+
+  line-height: 1.6;
+}
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.login-content form {
+  display: grid;
+  gap: 17px;
+}
+
+.login-content label {
+  display: grid;
+  gap: 7px;
+
+  color: var(--muted);
+
+  font-family:
+    "SFMono-Regular",
+    Consolas,
+    monospace;
+
+  font-size: 10px;
+
+  letter-spacing: 0.08em;
+}
+
+.login-content input {
+  width: 100%;
+
+  height: 44px;
+
+  padding: 0 13px;
+
+  border: 1px solid rgba(123, 220, 255, 0.16);
+
+  border-radius: 5px;
+
+  outline: none;
+
+  background: #070b0c;
+
+  color: var(--text);
+
+  font-family:
+    "SFMono-Regular",
+    Consolas,
+    monospace;
+
+  font-size: 13px;
+
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.login-content input::placeholder {
+  color: #45504e;
+}
+
+.login-content input:focus {
+  border-color: rgba(123, 220, 255, 0.55);
+
+  box-shadow:
+    0 0 0 2px rgba(123, 220, 255, 0.06),
+    0 0 20px rgba(123, 220, 255, 0.05);
+}
+
+/* =========================================================
+   ERROR
+   ========================================================= */
+
+.login-error {
+  padding: 9px 11px;
+
+  border-left: 2px solid var(--red);
+
+  background: rgba(255, 111, 111, 0.05);
+
+  color: var(--red);
+
+  font-family:
+    "SFMono-Regular",
+    Consolas,
+    monospace;
+
+  font-size: 11px;
+}
+
+/* =========================================================
+   BUTTON
+   ========================================================= */
+
+.login-content button {
+  height: 44px;
+
+  margin-top: 3px;
+
+  border: 1px solid rgba(123, 220, 255, 0.4);
+
+  border-radius: 5px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(123, 220, 255, 0.18),
+      rgba(123, 220, 255, 0.08)
+    );
+
+  color: var(--cyan);
+
+  font-family:
+    "SFMono-Regular",
+    Consolas,
+    monospace;
+
+  font-size: 12px;
+
+  font-weight: 700;
+
+  letter-spacing: 0.05em;
+
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.login-content button:hover {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(123, 220, 255, 0.25),
+      rgba(123, 220, 255, 0.1)
+    );
+
+  border-color: rgba(123, 220, 255, 0.65);
+
+  box-shadow:
+    0 0 22px rgba(123, 220, 255, 0.08);
+}
+
+.login-content button:disabled {
+  opacity: 0.45;
+}
+
+/* =========================================================
+   CONNECTION STATUS
+   ========================================================= */
+
+.login-footer-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  margin-top: 22px;
+
+  color: #65736e;
+
+  font-family:
+    "SFMono-Regular",
+    Consolas,
+    monospace;
+
+  font-size: 9px;
+
+  letter-spacing: 0.08em;
+}
+
+.login-footer-status span {
+  color: var(--green);
+
+  font-size: 8px;
+}
+
+/* =========================================================
+   BOTTOM BAR
+   ========================================================= */
+
+.login-bottom {
+  display: flex;
+  justify-content: space-between;
+
+  padding: 11px 18px;
+
+  border-top: 1px solid rgba(255,255,255,0.06);
+
+  color: #4d5a56;
+
+  font-family:
+    "SFMono-Regular",
+    Consolas,
+    monospace;
+
+  font-size: 8px;
+
+  letter-spacing: 0.08em;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+  .login-screen {
+    padding: 14px;
+  }
+
+  .login-content {
+    padding: 28px 22px 24px;
+  }
+
+  .login-header {
+    padding: 12px 14px;
+  }
+
+  .login-status {
+    display: none;
+  }
+
+  .login-content h1 {
+    font-size: 25px;
+  }
+
+  .login-bottom {
+    flex-direction: column;
+    gap: 5px;
+  }
+}
+

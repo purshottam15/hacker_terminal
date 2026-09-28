@@ -1,36 +1,35 @@
 const express = require('express');
 const Player = require('../models/Player');
+const { elapsedMs } = require('../services/playerState');
 
 const router = express.Router();
 
-// GET /api/leaderboard
-// Ordering: more levels unlocked first, then shorter completion/elapsed time.
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
   try {
-    const players = await Player.find({}).lean();
+    const now = new Date();
+    const players = await Player.find({ role: 'participant', status: { $ne: 'DISQUALIFIED' } })
+      .select('rollNo name score completedLevels status startedAt completedAt expiresAt lastSeenAt')
+      .lean();
 
-    const rows = players.map((p) => {
-      const levelsCompleted = p.completedLevels.length;
-      const endTime = p.completedAt || p.lastActiveAt || new Date();
-      const elapsedMs = new Date(endTime) - new Date(p.startedAt);
-      return {
-        name: p.name,
-        score: p.score,
-        levelsCompleted,
-        isComplete: !!p.completedAt,
-        elapsedMs: Math.max(0, elapsedMs)
-      };
-    });
+    const rows = players.map((player) => ({
+      rollNo: player.rollNo,
+      name: player.name,
+      score: player.score || 0,
+      levelsCompleted: player.completedLevels?.length || 0,
+      status: player.status,
+      isComplete: player.status === 'COMPLETED',
+      elapsedMs: elapsedMs(player, now)
+    }));
 
     rows.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
       if (b.levelsCompleted !== a.levelsCompleted) return b.levelsCompleted - a.levelsCompleted;
       return a.elapsedMs - b.elapsedMs;
     });
 
-    res.json({ leaderboard: rows.slice(0, 50) });
+    res.json({ leaderboard: rows.slice(0, 50), serverTime: now });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Could not load leaderboard.' });
+    next(err);
   }
 });
 

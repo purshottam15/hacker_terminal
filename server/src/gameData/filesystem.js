@@ -24,26 +24,26 @@
  * map, and levels.js for how a key id maps to a level/points/hints.
  *
  * KEY MAP (for reference while editing — kept in sync with keys.js):
- *   KEY_1  7F29        -> restricted_alpha, restricted_beta, restricted_gamma
+ *   KEY_1  7F29         -> alpha, beta, gamma
  *   KEY_2  B3D9         -> alpha/vault
  *   KEY_3  1907         -> beta/logs
- *   KEY_4  K4-2091       -> restricted_delta, archive
- *   KEY_5  D5-77A1       -> delta/backup
- *   KEY_6  AR-6602       -> archive/logs
- *   KEY_7  N3T-7734      -> network
- *   KEY_8  PR-5567       -> delta/backup/personnel
- *   KEY_9  DL-2205       -> network/deep_logs (+ unlocks grep)
- *   KEY_10 FR-9182       -> network/deep_logs/forensics
- *   KEY_11 MF-3300       -> mainframe (+ unlocks head)
- *   KEY_12 C0R3-4415     -> mainframe/core
- *   KEY_13 VX-8841       -> mainframe/core/vault_alpha, vault_beta
- *   KEY_14 ID-1907       -> vault_alpha/identity
- *   KEY_15 CO-3391       -> vault_beta/coordinates
- *   KEY_16 KA07-3391     -> final_uplink
- *   KEY_17 CA-5510       -> final_uplink/core_access
- *   KEY_18 CH-8850       -> final_uplink/core_access/black_box
- *   KEY_19 TRUTH-0001    -> final_uplink/the_truth
- *   KEY_20 END-0000      -> (no folder — completes the game)
+ *   KEY_4  K4-2091      -> delta, archive
+ *   KEY_5  D5-77A1      -> delta/backup
+ *   KEY_6  AR-6602      -> archive/logs
+ *   KEY_7  N3T-7734     -> network
+ *   KEY_8  PR-5567      -> delta/backup/personnel
+ *   KEY_9  DL-2205      -> network/deep_logs (+ unlocks grep)
+ *   KEY_10 FR-9182      -> network/deep_logs/forensics
+ *   KEY_11 MF-3300      -> mainframe (+ unlocks head)
+ *   KEY_12 C0R3-4415    -> mainframe/core
+ *   KEY_13 VX-8841      -> mainframe/core/vault_alpha, vault_beta
+ *   KEY_14 ID-1907      -> vault_alpha/identity
+ *   KEY_15 CO-3391      -> vault_beta/coordinates
+ *   KEY_16 KA07-3391    -> final_uplink
+ *   KEY_17 CA-5510      -> final_uplink/core_access
+ *   KEY_18 CH-8850      -> final_uplink/core_access/black_box
+ *   KEY_19 TRUTH-0001   -> final_uplink/the_truth
+ *   KEY_20 END-0000     -> (no folder — completes the game)
  */
 
 const filesystem = {
@@ -78,7 +78,7 @@ This terminal only understands a few things:
   hint          - if you're stuck, ask for a nudge
   unlock <code> - feed a code/key back into the system
 
-Most of this filesystem is locked. You'll see folders marked [LOCKED].
+Most of this filesystem is locked. You'll see folders marked ??.
 You can't force them open - you need a code. Codes are hidden in files,
 or you'll have to work one out from what you read. Feeding the right
 code to 'unlock' can open more than one door at once, so don't assume
@@ -89,6 +89,7 @@ sitting next to this file.
 
   - a ghost, for now`
     },
+
     {
       type: 'file',
       name: 'note.txt',
@@ -103,9 +104,10 @@ apparently, past me. good job.
 
 don't lose this one."`
     },
+
     {
       type: 'folder',
-      name: 'restricted_alpha',
+      name: 'alpha',
       requiresKey: 'KEY_1',
       children: [
         {
@@ -143,9 +145,10 @@ work it out.`
         }
       ]
     },
+
     {
       type: 'folder',
-      name: 'restricted_beta',
+      name: 'beta',
       requiresKey: 'KEY_1',
       children: [
         {
@@ -183,9 +186,10 @@ was left in only one spot. I was careful like that.`
         }
       ]
     },
+
     {
       type: 'folder',
-      name: 'restricted_gamma',
+      name: 'gamma',
       requiresKey: 'KEY_1',
       children: [
         {
@@ -215,9 +219,10 @@ Same badge number every working day. Consistent guy.`
         }
       ]
     },
+
     {
       type: 'folder',
-      name: 'restricted_delta',
+      name: 'delta',
       requiresKey: 'KEY_4',
       children: [
         {
@@ -269,12 +274,12 @@ things up on purpose.`
                   content:
 `PERSONNEL ROSTER (partial)
 
-K. ASHWORTH - Lead Systems Architect - STATUS: terminated (voluntary)
+Noah - Lead Systems Architect - STATUS: terminated (voluntary)
 J. OKONKWO  - Infrastructure - STATUS: active
 R. VANCE    - Compliance Director - STATUS: active
 D. PRIYA    - unlisted role - STATUS: unknown
 
-Ashworth's exit paperwork is missing. Everyone else's isn't.`
+Noah's exit paperwork is missing. Everyone else's isn't.`
                 }
               ]
             }
@@ -282,6 +287,7 @@ Ashworth's exit paperwork is missing. Everyone else's isn't.`
         }
       ]
     },
+
     {
       type: 'folder',
       name: 'archive',
@@ -292,26 +298,54 @@ Ashworth's exit paperwork is missing. Everyone else's isn't.`
           name: 'flag_procedure.txt',
           content:
 `ACCESS FLAG PROCEDURE
+---------------------
 
-To clear a personnel flag, feed the record's assigned unlock code
-into the system. There's exactly one flagged personnel record on
-this drive right now.
+The personnel record was flagged before the system
+was abandoned.
 
-  PR-5567
+The operator never trusted plain-text access codes.
+He left one final note:
 
-That's the whole code — it's for the record sitting in delta/backup.`
+"Every lock was moved two steps forward.
+Anyone who wants through must move it back."
+
+RECOVERY FRAGMENT:
+
+    RT-7789
+
+Decode the fragment using the operator's instruction
+and use the recovered value to clear the personnel flag.`
         },
         {
           type: 'file',
           name: 'internal_review.txt',
           content:
-`INTERNAL REVIEW NOTE
+`INTERNAL REVIEW // FINAL ENTRY
+------------------------------
 
-The full archive access logs are locked behind a review code, mostly
-to keep casual browsers out. It's not subtle if you're actually
-looking for it:
+The review was conducted in Archive Room AR.
 
-  AR-6602`
+Six personnel records had been marked during the
+investigation.
+
+Six recovery attempts failed before the operator
+sealed the system.
+
+The archive was sealed on the second day of the
+final incident.
+
+A note was found underneath the terminal:
+
+    "Room first.
+     Then how much marked.
+     Then how much failed.
+     Then when it was sealed."
+
+    "Join them exactly as written."
+
+No access key was recorded anywhere in this report.
+
+The access key has the format: two letters, followed by four digits. Preserve the XX-XXXX structure.`
         },
         {
           type: 'folder',
@@ -338,6 +372,7 @@ recovered from the same connection record:
         }
       ]
     },
+
     {
       type: 'folder',
       name: 'network',
@@ -350,31 +385,43 @@ recovered from the same connection record:
 `NETWORK WING
 
 This is the part of the system that talked to the outside world.
-There's a full connection log a level down, but it's enormous -
-thousands of lines. Reading it with 'cat' will just dump garbage at
-you.
 
-Somewhere in this system there's a smaller, sharper tool for
-searching through something this size instead of reading it end to
-end. Check the other file sitting next to this one.`
+There's a full connection log a level down, but it's enormous —
+thousands of lines. Reading it from beginning to end would be
+mostly noise.
+
+The operator who built this system expected the person following
+the trail to know how to search a large text record without
+printing every line.
+
+The other file in this directory contains the access note for the
+deeper logs.`
         },
+
         {
           type: 'file',
           name: 'deep_logs_access.txt',
           content:
 `DEEP LOGS - ACCESS NOTE
 
-Half-remembered search utility, noted here in case I forget I ever
-had it: 'grep'. Searches a file's contents for a pattern instead of
-printing the whole thing, e.g.:
+The deeper connection records were separated from the normal
+network logs before shutdown.
 
-  grep "ACCESS" filename.txt
+The access record below is the only surviving reference to the lock.
 
-Entering the code below should both open the deep logs folder and
-make that tool available in this shell, if it isn't already:
+ACCESS CODE:
 
-  DL-2205`
+  DL-2205
+
+Once inside, inspect the tools available to you before deciding
+how to search the connection history.
+
+One warning from the original operator:
+
+"Routine traffic buries the important event. Find the external
+connection that was granted and left a key fragment behind."`
         },
+
         {
           type: 'folder',
           name: 'deep_logs',
@@ -384,21 +431,34 @@ make that tool available in this shell, if it isn't already:
               type: 'file',
               name: 'connection_log.txt',
               large: true,
+
               content:
 `[FILE TOO LARGE TO DISPLAY WITH cat]
-This file has thousands of lines. Use grep to search it, e.g.:
-  grep "ACCESS" connection_log.txt`,
+
+The connection history contains hundreds of routine records.
+
+Most entries are ordinary system heartbeats and maintenance events.
+
+Somewhere inside this record is the event that matters.
+
+Find the entry that indicates an "EXTERNAL" connection was granted
+and identify the key fragment associated with that event.`,
+
               fullContent: Array.from({ length: 40 }, (_, i) => {
                 const n = String(i + 1).padStart(4, '0');
+
                 if (i === 22) {
-                  return `${n} 03:14:07 ACCESS GRANTED external_node=K.ASHWORTH-remote key_fragment=FR-9182 status=escalation_logged`;
+                  return `${n} 03:14:07 ACCESS GRANTED external_node=Noah-remote key_fragment=FR-9182 status=escalation_logged`;
                 }
+
                 if (i === 30) {
-                  return `${n} 03:15:44 ACCESS GRANTED external_node=K.ASHWORTH-remote note="pulling forensics dump before they lock me out"`;
+                  return `${n} 03:15:44 ACCESS GRANTED external_node=Noah-remote note="pulling forensics dump before they lock me out"`;
                 }
+
                 return `${n} 0${2 + (i % 3)}:${String((i * 7) % 60).padStart(2, '0')}:${String((i * 13) % 60).padStart(2, '0')} heartbeat ok subsystem=routine-${i % 5} status=nominal`;
               }).join('\n')
             },
+
             {
               type: 'folder',
               name: 'forensics',
@@ -410,7 +470,7 @@ This file has thousands of lines. Use grep to search it, e.g.:
                   content:
 `FORENSICS DUMP - RECOVERED
 
-Whatever Ashworth pulled before getting locked out is sitting in
+Whatever Noah pulled before getting locked out is sitting in
 this folder. Check the other file here for what it led to.`
                 },
                 {
@@ -435,6 +495,7 @@ me the top of this file" instead.`
         }
       ]
     },
+
     {
       type: 'folder',
       name: 'mainframe',
@@ -451,15 +512,23 @@ was scattered on purpose, in case only part of the drive survived.
 This is where it all reconnects.
 
 The core config file below is long, but the only line you need is
-right at the top. Try: head core_config.txt`
+right at the top.
+
+Find a way to inspect the beginning of the file without dumping
+the entire boot log.`
         },
+
         {
           type: 'file',
           name: 'core_config.txt',
           large: true,
           content:
 `[FILE TOO LARGE TO DISPLAY WITH cat]
-Try: head core_config.txt`,
+
+The boot log is too large to display normally.
+
+The information you need is at the very beginning of the file.`,
+
           fullContent:
 `INIT_KEY=C0R3-4415
 loaded module: auth
@@ -469,6 +538,7 @@ loaded module: watchdog
 loaded module: replication
 -- 340 more lines of boot log follow, none of them relevant --`
         },
+
         {
           type: 'folder',
           name: 'core',
@@ -490,6 +560,7 @@ useless. Same code opens both:
 
   VX-8841`
             },
+
             {
               type: 'folder',
               name: 'vault_alpha',
@@ -506,6 +577,7 @@ from a year and a rack number. Whoever finds this — that same
 number is the last four digits of what opens this vault's inner
 folder. Add the prefix ID- in front of it and you have your key."`
                 },
+
                 {
                   type: 'folder',
                   name: 'identity',
@@ -517,7 +589,7 @@ folder. Add the prefix ID- in front of it and you have your key."`
                       content:
 `IDENTITY CONFIRMED
 
-Subject: K. ASHWORTH
+Subject: Noah
 Personal designator used in later systems: KA07
 (consistent with him - same rack number again)
 
@@ -528,6 +600,7 @@ still need to know where he went.`
                 }
               ]
             },
+
             {
               type: 'folder',
               name: 'vault_beta',
@@ -543,21 +616,32 @@ There's a wide dump of raw sensor pings in this folder. Somewhere
 in there is a line tagged "SAFEHOUSE". Search for it instead of
 reading the whole thing.`
                 },
+
                 {
                   type: 'file',
                   name: 'sensor_dump.txt',
                   large: true,
                   content:
 `[FILE TOO LARGE TO DISPLAY WITH cat]
-Try: grep "SAFEHOUSE" sensor_dump.txt`,
+
+The sensor dump contains many routine pings.
+
+The useful record is associated with the safehouse.
+
+Search the dump for the identifying tag and recover the location
+code.`,
+
                   fullContent: Array.from({ length: 35 }, (_, i) => {
                     const n = String(i + 1).padStart(4, '0');
+
                     if (i === 19) {
                       return `${n} PING tag=SAFEHOUSE code=CO-3391 status=last_known_good`;
                     }
+
                     return `${n} PING tag=routine-${i % 4} status=nominal drift=${(i * 3) % 9}ms`;
                   }).join('\n')
                 },
+
                 {
                   type: 'folder',
                   name: 'coordinates',
@@ -583,6 +667,7 @@ something. You know both halves now.`
         }
       ]
     },
+
     {
       type: 'folder',
       name: 'final_uplink',
@@ -600,6 +685,7 @@ two things you'd already carried the whole way.
 
 There's one more door. Check the other file here for its code.`
         },
+
         {
           type: 'file',
           name: 'access_note.txt',
@@ -610,6 +696,7 @@ There's one more door. Check the other file here for its code.`
 
 That opens core_access. Almost done.`
         },
+
         {
           type: 'folder',
           name: 'core_access',
@@ -622,25 +709,44 @@ That opens core_access. Almost done.`
 `CORE ACCESS - BLACK BOX RECORDER
 
 One transcript left in this folder before the black box itself
-unlocks. It's long. Search it for the word "CHRYSALIS" - that's a
-project name nobody outside one specific room was ever supposed to
-know.`
+unlocks. It's long.
+
+The project name you're looking for appears somewhere inside the
+transcript. Search for the name that nobody outside one specific
+room was ever supposed to know
+The visible beginning is not the whole record.
+Routine entries were left at the top to hide what matters.
+The useful part is buried deeper in the transcript.
+
+Do not assume the first lines contain the answer.
+Inspect further. The system can show more than it reveals by default.
+`
             },
+
             {
               type: 'file',
               name: 'transcript.txt',
               large: true,
               content:
 `[FILE TOO LARGE TO DISPLAY WITH cat]
-Try: grep "CHRYSALIS" transcript.txt`,
+
+The transcript contains many routine conversations.
+
+One project name is relevant to the investigation.
+
+Find the project name and recover the access code associated with it.`,
+
               fullContent: Array.from({ length: 30 }, (_, i) => {
                 const n = String(i + 1).padStart(4, '0');
+
                 if (i === 24) {
                   return `${n} SPEAKER_B: "Project CHRYSALIS goes dark tonight. unlock_code=CH-8850. Nobody outside this room repeats that name."`;
                 }
+
                 return `${n} SPEAKER_A: routine meeting chatter, nothing of note, timestamp drift ${(i * 2) % 11}s`;
               }).join('\n')
             },
+
             {
               type: 'folder',
               name: 'black_box',
@@ -653,14 +759,18 @@ Try: grep "CHRYSALIS" transcript.txt`,
 `BLACK BOX - FINAL RECORDING (transcribed)
 
 "If someone's reading this, the report never made it out the front
-door, so this is the back door. Project CHRYSALIS is a monitoring
-pilot running on employee personal devices, disguised internally as
-a 'wellness telemetry program.' I found it by accident. I reported
-it. Three days later I was 'voluntarily' terminated.
+door, so this is the back door.
 
-Everything on this drive is the evidence. One folder left. The code
-to open it is the same word this recorder used to log its own
-shutdown:
+Project CHRYSALIS is a monitoring pilot running on employee personal
+devices, disguised internally as a 'wellness telemetry program.'
+
+I found it by accident. I reported it. Three days later I was
+'voluntarily' terminated.
+
+Everything on this drive is the evidence. One folder left.
+
+The code to open it is the same word this recorder used to log its
+own shutdown:
 
   TRUTH-0001"`
                 }
@@ -668,6 +778,7 @@ shutdown:
             }
           ]
         },
+
         {
           type: 'folder',
           name: 'the_truth',
@@ -677,25 +788,32 @@ shutdown:
               type: 'file',
               name: 'final_message.txt',
               content:
-`If you've read this far, you now know what I knew: this company was
-running a monitoring program on its own employees' personal devices,
-dressed up internally as a "wellness telemetry pilot." Project
-CHRYSALIS. I found it by accident, tried to report it internally,
-and got quietly terminated for it instead.
+`If you've read this far, you now know what I knew:
 
-I built this whole drive as a dead-man's switch, because I didn't
+This company was running a monitoring program on its own employees'
+personal devices, dressed up internally as a "wellness telemetry
+pilot."
+
+Project CHRYSALIS.
+
+I found it by accident, tried to report it internally, and got
+quietly terminated for it instead.
+
+I built this whole drive as a dead-man's switch because I didn't
 trust the report to survive if I went through the front door.
 
 Whoever you are - you did the actual work of finding it. That
 matters more than anything I could've said in a single readme.
 
-One formality left. This system was built to close itself out once
-someone actually got here. The shutdown code was always going to be
-the last thing I typed before I disappeared:
+One formality left.
+
+This system was built to close itself out once someone actually got
+here. The shutdown code was always going to be the last thing I
+typed before I disappeared:
 
   END-0000
 
-  - K. Ashworth`
+  - Noah`
             }
           ]
         }

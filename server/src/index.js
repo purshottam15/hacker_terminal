@@ -1,31 +1,79 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
+const helmet = require('helmet');
+const mongoose = require('mongoose');
 const connectDB = require('./db');
-const playersRouter = require('./routes/players');
+const config = require('./config');
+const authRouter = require('./routes/auth');
+const gameRouter = require('./routes/game');
+const sessionRouter = require('./routes/session');
+const adminRouter = require('./routes/admin');
 const leaderboardRouter = require('./routes/leaderboard');
 const metaRouter = require('./routes/meta');
+const playersRouter = require('./routes/players');
+const { getEventState } = require('./services/eventState');
 
 const app = express();
-const PORT = process.env.PORT || 4000;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/hackers-terminal';
-const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
+const allowedOrigins = config.FRONTEND_URL.split(',').map((origin) => origin.trim()).filter(Boolean);
 
-app.use(cors({ origin: CLIENT_ORIGIN }));
-app.use(express.json());
+app.set('trust proxy', 1);
+app.use(helmet());
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true
+}));
+app.use(express.json({ limit: config.JSON_BODY_LIMIT }));
+app.use(cookieParser(config.SESSION_SECRET));
 
-app.get('/api/health', (req, res) => res.json({ ok: true }));
-app.use('/api/players', playersRouter);
+async function healthPayload() {
+  const event = await getEventState().catch(() => null);
+  return {
+    ok: mongoose.connection.readyState === 1,
+    api: 'ok',
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    eventStatus: event?.state || 'UNKNOWN',
+    serverTime: new Date()
+  };
+}
+
+app.get('/health', async (req, res) => res.json(await healthPayload()));
+app.get('/api/health', async (req, res) => res.json(await healthPayload()));
+
+app.use('/api/auth', authRouter);
+app.use('/api/game', gameRouter);
+app.use('/api/session', sessionRouter);
+app.use('/api/admin', adminRouter);
 app.use('/api/leaderboard', leaderboardRouter);
 app.use('/api/meta', metaRouter);
+app.use('/api/players', playersRouter);
 
-app.use((req, res) => res.status(404).json({ error: 'Not found' }));
+app.use((req, res) => res.status(404).json({ error: 'Not found.' }));
 
-connectDB(MONGODB_URI)
-  .then(() => {
-    app.listen(PORT, () => console.log(`Hacker's Terminal server listening on port ${PORT}`));
+app.use((err, req, res, next) => {
+  const status = err.status || err.statusCode || (err.name === 'ValidationError' ? 400 : 500);
+  if (status >= 500) {
+    console.error(err);
+  } else {
+    console.warn(err.message);
+  }
+  res.status(status).json({
+    error: status >= 500 && config.isProduction ? 'Internal server error.' : err.message || 'Request failed.'
+  });
+});
+
+connectDB(config.MONGODB_URI)
+  .then(async () => {
+    await getEventState();
+    app.listen(config.PORT, () => console.log(`Hacker's Terminal server listening on port ${config.PORT}`));
   })
   .catch((err) => {
     console.error('Failed to connect to MongoDB:', err.message);
     process.exit(1);
   });
+
+module.exports = app;

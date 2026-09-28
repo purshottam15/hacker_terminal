@@ -29,6 +29,7 @@ const levels = [
       'note.txt has a code in it. Feed it to the system with: unlock 7F29'
     ]
   },
+
   {
     id: 2,
     key: 'KEY_2',
@@ -37,11 +38,12 @@ const levels = [
     requiredCommand: null,
     points: 200,
     hints: [
-      'You unlocked three wings at once. Start with alpha — cd restricted_alpha',
+      'You unlocked three wings at once. Start with alpha — cd alpha',
       'cat the file you find there carefully, all the way to the end.',
       'access.txt ends with a code: B3D9'
     ]
   },
+
   {
     id: 3,
     key: 'KEY_3',
@@ -50,11 +52,12 @@ const levels = [
     requiredCommand: null,
     points: 200,
     hints: [
-      'cd restricted_beta and cat old_note.txt',
+      'cd beta and cat old_note.txt',
       'The note gives you two numbers: a year and a rack number. Combine them in the order they\'re mentioned.',
       'Year 2019 gives "19", rack 07 gives "07". Mashed together: unlock 1907'
     ]
   },
+
   {
     id: 4,
     key: 'KEY_4',
@@ -63,11 +66,12 @@ const levels = [
     requiredCommand: null,
     points: 200,
     hints: [
-      'cd restricted_gamma and read both files in there.',
+      'cd gamma and read both files in there.',
       'One file gives you a prefix, the other gives you a recurring badge number.',
       'Prefix "K4-" plus badge "2091": unlock K4-2091'
     ]
   },
+
   {
     id: 5,
     key: 'KEY_5',
@@ -76,11 +80,12 @@ const levels = [
     requiredCommand: null,
     points: 300,
     hints: [
-      'cd restricted_delta, then ls again — look closely at every filename, even the odd-looking ones.',
+      'cd delta, then ls again — look closely at every filename, even the odd-looking ones.',
       'One "file" isn\'t really meant to be read for its content — its name is the point. cat it anyway.',
       'Strip the "cfg_" label off the filename: unlock D5-77A1'
     ]
   },
+
   {
     id: 6,
     key: 'KEY_6',
@@ -89,11 +94,10 @@ const levels = [
     requiredCommand: null,
     points: 300,
     hints: [
-      'cd archive and read everything sitting there before going further.',
-      'One file is explicitly labelled as an internal review note.',
-      'unlock AR-6602'
+      "Start with the room, then follow the operator's order. The numbers are not meant to be read separately"
     ]
   },
+
   {
     id: 7,
     key: 'KEY_7',
@@ -107,6 +111,7 @@ const levels = [
       'unlock N3T-7734, then check `ls` from the root again'
     ]
   },
+
   {
     id: 8,
     key: 'KEY_8',
@@ -120,32 +125,35 @@ const levels = [
       'flag_procedure.txt has it: unlock PR-5567'
     ]
   },
+
   {
     id: 9,
     key: 'KEY_9',
     name: 'A Sharper Tool',
-    objective: 'Unlock the deep logs — and the tool you\'ll need to actually read them.',
+    objective: 'Recover access to the deep connection logs and discover what happened immediately before the system locked down.',
     requiredCommand: null,
     points: 350,
     hints: [
-      'cd network and read what\'s there.',
-      'One file specifically talks about a search utility and gives you a code in the same breath.',
-      'unlock DL-2205 — this should also make `grep` usable.'
+      'cd network and inspect both files. One contains the access procedure for the deeper logs.',
+      'The note mentions a tool designed for searching text without reading an entire file. The tool should become available after you unlock the deep logs.',
+      'The access code is DL-2205. Unlock it, then check `help` or the sidebar before continuing.'
     ]
   },
+
   {
     id: 10,
     key: 'KEY_10',
     name: 'Search, Don\'t Read',
-    objective: 'Use grep to pull a hidden code out of a huge connection log.',
+    objective: 'Search the deep connection history and recover the code associated with the external access event.',
     requiredCommand: 'grep',
     points: 400,
     hints: [
-      'cd into deep_logs. `cat` on connection_log.txt will refuse — it\'s too big.',
-      'The file itself tells you what to search for.',
-      'grep "ACCESS" connection_log.txt — look for "key_fragment=" in the results, then unlock FR-9182'
+      'cd into deep_logs. `cat` on connection_log.txt will refuse because the file is too large.',
+      'Read the message shown for the large file carefully. It tells you what kind of event matters.',
+      'Check the sidebar/help for the command that searches text. Use its syntax to search for the relevant external-access event; the matching result contains the key fragment.'
     ]
   },
+
   {
     id: 11,
     key: 'KEY_11',
@@ -159,19 +167,21 @@ const levels = [
       'unlock MF-3300 — this should also make `head` usable.'
     ]
   },
+
   {
     id: 12,
     key: 'KEY_12',
     name: 'Just The First Line',
-    objective: 'Use head to pull the init key out of the mainframe\'s boot config.',
+    objective: 'Use the appropriate file-inspection tool to pull the init key from the mainframe\'s boot config.',
     requiredCommand: 'head',
     points: 450,
     hints: [
       'cd mainframe. core_config.txt is too long for cat.',
-      'You only need the very first line of it.',
-      'head core_config.txt — then unlock C0R3-4415'
+      'The file is large, but the information you need is right at the beginning.',
+      'Check the available commands in the sidebar/help and use the one designed to inspect the beginning of a file. The first line contains the key.'
     ]
   },
+
   {
     id: 13,
     key: 'KEY_13',
@@ -185,6 +195,7 @@ const levels = [
       'unlock VX-8841'
     ]
   },
+
   {
     id: 14,
     key: 'KEY_14',
@@ -198,6 +209,7 @@ const levels = [
       'That number was 1907. Add the prefix it tells you: unlock ID-1907'
     ]
   },
+
   {
     id: 15,
     key: 'KEY_15',
@@ -211,6 +223,7 @@ const levels = [
       'grep "SAFEHOUSE" sensor_dump.txt — then unlock CO-3391'
     ]
   },
+
   {
     id: 16,
     key: 'KEY_16',
@@ -224,6 +237,7 @@ const levels = [
       'unlock KA07-3391'
     ]
   },
+
   {
     id: 17,
     key: 'KEY_17',
@@ -237,19 +251,21 @@ const levels = [
       'unlock CA-5510'
     ]
   },
+
   {
     id: 18,
     key: 'KEY_18',
     name: 'Project Chrysalis',
-    objective: 'Search the recovered transcript for the name of the project he found.',
+    objective: 'Search the recovered transcript and identify the project that Noah was investigating.',
     requiredCommand: 'grep',
     points: 600,
     hints: [
       'cd core_access. transcript.txt is far too long to cat.',
-      'The notice file next to it tells you exactly what word to search for.',
-      'grep "CHRYSALIS" transcript.txt — then unlock CH-8850'
+      'The notice beside it tells you what kind of information you are looking for.',
+      'Check the sidebar/help for the text-search command, then search the transcript for the project reference. The matching record contains the access code.'
     ]
   },
+
   {
     id: 19,
     key: 'KEY_19',
@@ -263,6 +279,7 @@ const levels = [
       'unlock TRUTH-0001'
     ]
   },
+
   {
     id: 20,
     key: 'KEY_20',
