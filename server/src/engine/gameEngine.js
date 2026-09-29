@@ -14,9 +14,13 @@ const BASE_COMMANDS = commandDefs
   .filter((c) => !c.requiresKey)
   .map((c) => c.name);
 
-const MAX_HINTS = 3;
+const MAX_HINTS = 2;
 
-const HINT_COSTS = [80, 120, 150];
+/*
+ * ============================================================
+ * TOKENIZER
+ * ============================================================
+ */
 
 function tokenize(input) {
   const tokens = [];
@@ -36,22 +40,34 @@ function tokenize(input) {
   return tokens;
 }
 
+/*
+ * ============================================================
+ * LEVEL HELPERS
+ * ============================================================
+ */
+
 function levelForKey(keyId) {
-  return levels.find(
-    (l) => l.key === keyId
-  ) || null;
+  return (
+    levels.find(
+      (l) => l.key === keyId
+    ) || null
+  );
 }
 
 function commandDef(name) {
-  return commandDefs.find(
-    (c) => c.name === name
-  ) || null;
+  return (
+    commandDefs.find(
+      (c) => c.name === name
+    ) || null
+  );
 }
 
 function isCommandUnlocked(player, name) {
   const def = commandDef(name);
 
-  if (!def) return false;
+  if (!def) {
+    return false;
+  }
 
   if (!def.requiresKey) {
     return true;
@@ -62,23 +78,12 @@ function isCommandUnlocked(player, name) {
   );
 }
 
-/**
- * Makes sure old players using the previous
- * hintProgress format don't break.
- *
- * Old:
- * {
- *   "1": 1,
- *   "2": 0
- * }
- *
- * New:
- * {
- *   totalUsed: 0,
- *   levels: {},
- *   pending: null
- * }
+/*
+ * ============================================================
+ * HINT PROGRESS NORMALIZATION
+ * ============================================================
  */
+
 function normalizeHintProgress(player) {
   let progress = player.hintProgress;
 
@@ -99,8 +104,14 @@ function normalizeHintProgress(player) {
   }
 
   /*
-   * Convert old format.
+   * Convert old format:
+   *
+   * {
+   *   "1": 1,
+   *   "2": 0
+   * }
    */
+
   if (
     progress.totalUsed === undefined &&
     !progress.levels
@@ -109,10 +120,16 @@ function normalizeHintProgress(player) {
 
     let totalUsed = 0;
 
-    for (const [levelId, value] of Object.entries(progress)) {
+    for (
+      const [levelId, value]
+      of Object.entries(progress)
+    ) {
       const count = Math.max(
         0,
-        Number(value) || 0
+        Math.min(
+          MAX_HINTS,
+          Number(value) || 0
+        )
       );
 
       levelsProgress[levelId] = count;
@@ -121,13 +138,8 @@ function normalizeHintProgress(player) {
     }
 
     progress = {
-      totalUsed: Math.min(
-        MAX_HINTS,
-        totalUsed
-      ),
-
+      totalUsed,
       levels: levelsProgress,
-
       pending: null
     };
 
@@ -140,24 +152,29 @@ function normalizeHintProgress(player) {
     progress.levels = {};
   }
 
-  if (progress.pending === undefined) {
+  if (
+    progress.pending === undefined
+  ) {
     progress.pending = null;
   }
 
-  progress.totalUsed = Math.min(
-    MAX_HINTS,
+  progress.totalUsed =
     Math.max(
       0,
-      Number(progress.totalUsed) || 0
-    )
-  );
+      Number(
+        progress.totalUsed
+      ) || 0
+    );
 
   return progress;
 }
 
-/**
- * Folders/commands newly opened by a given key id.
+/*
+ * ============================================================
+ * UNLOCK HELPERS
+ * ============================================================
  */
+
 function describeUnlocksForKey(keyId) {
   const newFolders = [];
 
@@ -176,7 +193,10 @@ function describeUnlocksForKey(keyId) {
 
         walk(
           child,
-          [...pathSegs, child.name]
+          [
+            ...pathSegs,
+            child.name
+          ]
         );
       }
     }
@@ -188,8 +208,12 @@ function describeUnlocksForKey(keyId) {
   );
 
   const newCommands = commandDefs
-    .filter((c) => c.requiresKey === keyId)
-    .map((c) => c.name);
+    .filter(
+      (c) => c.requiresKey === keyId
+    )
+    .map(
+      (c) => c.name
+    );
 
   return {
     newFolders,
@@ -197,109 +221,356 @@ function describeUnlocksForKey(keyId) {
   };
 }
 
+/*
+ * ============================================================
+ * FILESYSTEM HELPERS
+ * ============================================================
+ */
+
 function listing(folderNode, unlockedKeys) {
   if (
+    !folderNode ||
     !folderNode.children ||
     folderNode.children.length === 0
   ) {
     return ['(empty)'];
   }
 
-  return folderNode.children.map((child) => {
-    if (child.type === 'folder') {
-      const locked = !isAccessible(
-        child,
-        unlockedKeys
-      );
+  return folderNode.children.map(
+    (child) => {
+      if (child.type === 'folder') {
+        const locked =
+          !isAccessible(
+            child,
+            unlockedKeys
+          );
 
-      return locked
-        ? `🔒 ${child.name}`
-        : `${child.name}/`;
+        return locked
+          ? `🔒 ${child.name}`
+          : `${child.name}/`;
+      }
+
+      return child.name;
     }
-
-    return child.name;
-  });
+  );
 }
 
 function ensureCwdValid(player) {
-  const folder = getFolderAtPath(
-    player.cwd,
-    player.unlockedKeys
-  );
+  const folder =
+    getFolderAtPath(
+      player.cwd,
+      player.unlockedKeys
+    );
 
   if (!folder) {
     player.cwd = [];
   }
 }
 
-/**
- * Returns the next active level.
+/*
+ * ============================================================
+ * PATH HELPERS
+ * ============================================================
  */
-function getCurrentLevel(player) {
+
+/*
+ * Converts:
+ *
+ * []
+ * -> "/"
+ *
+ * ["alpha"]
+ * -> "/alpha"
+ *
+ * ["core", "vault_alpha"]
+ * -> "/core/vault_alpha"
+ */
+
+function normalizePath(path) {
+  if (!path) {
+    return '/';
+  }
+
+  if (Array.isArray(path)) {
+    return path.length
+      ? `/${path.join('/')}`
+      : '/';
+  }
+
+  let value = String(path);
+
+  if (!value.startsWith('/')) {
+    value = `/${value}`;
+  }
+
+  if (
+    value.length > 1 &&
+    value.endsWith('/')
+  ) {
+    value = value.slice(0, -1);
+  }
+
+  return value;
+}
+
+/*
+ * Returns true when currentPath is:
+ *
+ * exactly targetPath
+ *
+ * OR
+ *
+ * inside targetPath.
+ *
+ * Example:
+ *
+ * target = /network
+ *
+ * current = /network
+ * current = /network/deep
+ *
+ * both match.
+ */
+
+function isPathInside(
+  currentPath,
+  targetPath
+) {
+  const current =
+    normalizePath(
+      currentPath
+    );
+
+  const target =
+    normalizePath(
+      targetPath
+    );
+
+  if (target === '/') {
+    return true;
+  }
+
   return (
-    levels.find(
-      (l) =>
-        !player.completedLevels.includes(l.id)
-    ) || null
+    current === target ||
+    current.startsWith(
+      `${target}/`
+    )
   );
 }
 
-/**
- * Returns the number of hints already revealed
- * for a specific level.
+/*
+ * ============================================================
+ * FIND LEVEL FOR CURRENT FOLDER
+ * ============================================================
+ *
+ * IMPORTANT:
+ *
+ * The hint system is based on the player's
+ * CURRENT LOCATION, NOT the first incomplete level.
+ *
+ * Example:
+ *
+ * Player:
+ *
+ * /beta
+ *
+ * Level 2 (alpha) incomplete
+ * Level 3 (beta) incomplete
+ *
+ * hint
+ *
+ * -> Beta hint
+ *
+ * NOT Alpha hint.
+ *
+ * When multiple levels belong to the same
+ * area, the deepest matching folder is used.
  */
-function getLevelHintCount(progress, levelId) {
+
+function getLevelForCurrentFolder(
+  player
+) {
+  const currentPath =
+    normalizePath(
+      player.cwd
+    );
+
+  const candidates =
+    levels.filter(
+      (level) =>
+        level.folder &&
+        isPathInside(
+          currentPath,
+          level.folder
+        ) &&
+        !player.completedLevels.includes(
+          level.id
+        )
+    );
+
+  if (
+    candidates.length === 0
+  ) {
+    return null;
+  }
+
+  /*
+   * Prefer the deepest folder match.
+   *
+   * Example:
+   *
+   * /network
+   * /network/deep
+   *
+   * At /network/deep,
+   * Level 10 should win over
+   * Level 7.
+   */
+
+  candidates.sort(
+    (a, b) => {
+      const aDepth =
+        normalizePath(
+          a.folder
+        )
+          .split('/')
+          .filter(Boolean)
+          .length;
+
+      const bDepth =
+        normalizePath(
+          b.folder
+        )
+          .split('/')
+          .filter(Boolean)
+          .length;
+
+      return bDepth - aDepth;
+    }
+  );
+
+  return candidates[0];
+}
+
+/*
+ * ============================================================
+ * LEVEL HINT COUNT
+ * ============================================================
+ */
+
+function getLevelHintCount(
+  progress,
+  levelId
+) {
   return Math.max(
     0,
-    Number(progress.levels[levelId]) || 0
+    Math.min(
+      MAX_HINTS,
+      Number(
+        progress.levels[levelId]
+      ) || 0
+    )
   );
 }
 
-/**
- * HINT SYSTEM
+/*
+ * ============================================================
+ * HINT COST
+ * ============================================================
  *
- * 3 hints per event:
- *
- * Hint 1 = 10 points
- * Hint 2 = 20 points
- * Hint 3 = 30 points
- *
- * "hint"
- *      -> shows cost and asks for confirmation
- *
- * "hint confirm"
- *      -> actually consumes the hint
- *
- * "hint cancel"
- *      -> cancels pending hint
+ * Hint 1 = 25%
+ * Hint 2 = 50%
  */
+
+function getHintCost(
+  level,
+  hintNumber
+) {
+  if (!level) {
+    return null;
+  }
+
+  const points =
+    Math.max(
+      0,
+      Number(level.points) || 0
+    );
+
+  if (hintNumber === 1) {
+    return Math.ceil(
+      points * 0.25
+    );
+  }
+
+  if (hintNumber === 2) {
+    return Math.ceil(
+      points * 0.50
+    );
+  }
+
+  return null;
+}
+
+/*
+ * ============================================================
+ * HINT COMMAND
+ * ============================================================
+ */
+
 function handleHintCommand(
   player,
   args,
   output
 ) {
   const progress =
-    normalizeHintProgress(player);
+    normalizeHintProgress(
+      player
+    );
+
+  /*
+   * ==========================================================
+   * FIND LEVEL FROM CURRENT FOLDER
+   * ==========================================================
+   */
 
   const currentLevel =
-    getCurrentLevel(player);
+    getLevelForCurrentFolder(
+      player
+    );
+
+  /*
+   * No hint associated with
+   * current location.
+   */
 
   if (!currentLevel) {
     output.push(
-      'No active objective. You\'ve completed everything.'
+      'No hint is available for this location.'
+    );
+
+    output.push(
+      `CURRENT LOCATION: ${normalizePath(player.cwd)}`
     );
 
     return;
   }
 
-  const used = Math.min(
-    MAX_HINTS,
-    progress.totalUsed || 0
-  );
+  /*
+   * Current level usage.
+   */
+
+  const used =
+    getLevelHintCount(
+      progress,
+      currentLevel.id
+    );
 
   /*
-   * Cancel pending request.
+   * ==========================================================
+   * CANCEL
+   * ==========================================================
    */
+
   if (
     args.length === 1 &&
     args[0].toLowerCase() === 'cancel'
@@ -319,15 +590,24 @@ function handleHintCommand(
     );
 
     output.push(
-      `Hints remaining: ${MAX_HINTS - used}/${MAX_HINTS}`
+      `Hints used this level: ${used}/${MAX_HINTS}`
+    );
+
+    output.push(
+      `Hints remaining this level: ${
+        MAX_HINTS - used
+      }`
     );
 
     return;
   }
 
   /*
+   * ==========================================================
    * CONFIRM
+   * ==========================================================
    */
+
   if (
     args.length === 1 &&
     args[0].toLowerCase() === 'confirm'
@@ -348,11 +628,30 @@ function handleHintCommand(
       progress.pending;
 
     /*
-     * Make sure the pending request still
-     * belongs to the current level.
+     * IMPORTANT:
+     *
+     * Re-check the player's CURRENT
+     * location when confirming.
+     *
+     * This prevents:
+     *
+     * hint
+     * cd ../beta
+     * hint confirm
+     *
+     * from revealing the old area's hint.
      */
+
+    const currentPath =
+      normalizePath(
+        player.cwd
+      );
+
     if (
-      pending.levelId !== currentLevel.id
+      !isPathInside(
+        currentPath,
+        currentLevel.folder
+      )
     ) {
       progress.pending = null;
 
@@ -361,42 +660,78 @@ function handleHintCommand(
       );
 
       output.push(
-        'Request a new hint for the current objective.'
+        'You changed location. Request a new hint here.'
+      );
+
+      return;
+    }
+
+    if (
+      pending.levelId !==
+      currentLevel.id
+    ) {
+      progress.pending = null;
+
+      output.push(
+        'The pending hint is no longer valid.'
+      );
+
+      output.push(
+        'Request a new hint for the current location.'
       );
 
       return;
     }
 
     /*
-     * Recalculate everything on confirmation.
+     * Recalculate actual usage.
      */
+
     const currentUsed =
-      Math.min(
-        MAX_HINTS,
-        progress.totalUsed || 0
+      getLevelHintCount(
+        progress,
+        currentLevel.id
       );
 
-    if (currentUsed >= MAX_HINTS) {
+    if (
+      currentUsed >= MAX_HINTS
+    ) {
       progress.pending = null;
 
       output.push(
-        'HINT LIMIT REACHED.'
+        'HINT LIMIT REACHED FOR THIS LEVEL.'
       );
 
       output.push(
-        'You have used all 3 available hints.'
+        'You have used all 2 hints for this objective.'
       );
 
       return;
     }
 
+    /*
+     * Determine next hint.
+     */
+
+    const hintNumber =
+      currentUsed + 1;
+
     const cost =
-      HINT_COSTS[currentUsed];
+      getHintCost(
+        currentLevel,
+        hintNumber
+      );
 
     const score =
       Number(player.score) || 0;
 
-    if (score < cost) {
+    /*
+     * Check score.
+     */
+
+    if (
+      score < cost
+    ) {
       progress.pending = null;
 
       output.push(
@@ -418,21 +753,16 @@ function handleHintCommand(
       return;
     }
 
-    const levelHintCount =
-      getLevelHintCount(
-        progress,
-        currentLevel.id
-      );
+    /*
+     * Get hints.
+     */
 
     const hintList =
       currentLevel.hints || [];
 
-    /*
-     * No hint available for this level.
-     */
     if (
       hintList.length === 0 ||
-      levelHintCount >= hintList.length
+      currentUsed >= hintList.length
     ) {
       progress.pending = null;
 
@@ -444,30 +774,43 @@ function handleHintCommand(
     }
 
     /*
-     * Deduct points.
+     * ========================================================
+     * DEDUCT SCORE
+     * ========================================================
      */
+
     player.score =
       score - cost;
 
     /*
-     * Increase global usage.
+     * ========================================================
+     * UPDATE HINT USAGE
+     * ========================================================
      */
-    progress.totalUsed =
+
+    progress.levels[
+      currentLevel.id
+    ] =
       currentUsed + 1;
 
-    /*
-     * Increase level hint usage.
-     */
-    progress.levels[currentLevel.id] =
-      levelHintCount + 1;
+    progress.totalUsed =
+      Math.max(
+        0,
+        Number(
+          progress.totalUsed
+        ) || 0
+      ) + 1;
 
-    /*
-     * Clear confirmation state.
-     */
     progress.pending = null;
 
+    /*
+     * ========================================================
+     * GET HINT
+     * ========================================================
+     */
+
     const hint =
-      hintList[levelHintCount];
+      hintList[currentUsed];
 
     output.push(
       `[Level ${currentLevel.id}: ${currentLevel.name}]`
@@ -479,7 +822,9 @@ function handleHintCommand(
       '========== SYSTEM HINT =========='
     );
 
-    output.push(hint);
+    output.push(
+      hint
+    );
 
     output.push(
       '=================================='
@@ -488,7 +833,11 @@ function handleHintCommand(
     output.push('');
 
     output.push(
-      `HINT USED: ${progress.totalUsed}/${MAX_HINTS}`
+      `HINT USED THIS LEVEL: ${
+        progress.levels[
+          currentLevel.id
+        ]
+      }/${MAX_HINTS}`
     );
 
     output.push(
@@ -499,14 +848,34 @@ function handleHintCommand(
       `CURRENT SCORE: ${player.score}`
     );
 
+    /*
+     * ========================================================
+     * NEXT HINT
+     * ========================================================
+     */
+
+    const hintsRemaining =
+      MAX_HINTS -
+      progress.levels[
+        currentLevel.id
+      ];
+
     if (
-      progress.totalUsed < MAX_HINTS
+      hintsRemaining > 0
     ) {
+      const nextHintNumber =
+        progress.levels[
+          currentLevel.id
+        ] + 1;
+
       const nextCost =
-        HINT_COSTS[progress.totalUsed];
+        getHintCost(
+          currentLevel,
+          nextHintNumber
+        );
 
       output.push(
-        `HINTS REMAINING: ${MAX_HINTS - progress.totalUsed}`
+        `HINTS REMAINING THIS LEVEL: ${hintsRemaining}`
       );
 
       output.push(
@@ -514,11 +883,11 @@ function handleHintCommand(
       );
     } else {
       output.push(
-        'HINTS REMAINING: 0'
+        'HINTS REMAINING THIS LEVEL: 0'
       );
 
       output.push(
-        'No further hints are available.'
+        'No further hints are available for this level.'
       );
     }
 
@@ -526,10 +895,14 @@ function handleHintCommand(
   }
 
   /*
-   * Anything other than plain "hint",
-   * "hint confirm", or "hint cancel".
+   * ==========================================================
+   * INVALID HINT COMMAND
+   * ==========================================================
    */
-  if (args.length > 0) {
+
+  if (
+    args.length > 0
+  ) {
     output.push(
       'Usage: hint'
     );
@@ -546,19 +919,30 @@ function handleHintCommand(
   }
 
   /*
-   * Already used all hints.
+   * ==========================================================
+   * HINT LIMIT
+   * ==========================================================
    */
-  if (used >= MAX_HINTS) {
+
+  if (
+    used >= MAX_HINTS
+  ) {
     output.push(
-      'HINT LIMIT REACHED.'
+      'HINT LIMIT REACHED FOR THIS LEVEL.'
     );
 
     output.push(
-      'You have used all 3 available hints.'
+      'You have used all 2 hints for this objective.'
     );
 
     return;
   }
+
+  /*
+   * ==========================================================
+   * GET CONFIGURED HINTS
+   * ==========================================================
+   */
 
   const hintList =
     currentLevel.hints || [];
@@ -569,9 +953,6 @@ function handleHintCommand(
       currentLevel.id
     );
 
-  /*
-   * Current level has no more hints.
-   */
   if (
     hintList.length === 0 ||
     levelHintCount >= hintList.length
@@ -583,24 +964,52 @@ function handleHintCommand(
     return;
   }
 
+  /*
+   * ==========================================================
+   * NEXT HINT
+   * ==========================================================
+   */
+
+  const hintNumber =
+    levelHintCount + 1;
+
   const cost =
-    HINT_COSTS[used];
+    getHintCost(
+      currentLevel,
+      hintNumber
+    );
 
   const score =
     Number(player.score) || 0;
 
   /*
-   * Create pending request.
+   * ==========================================================
+   * CREATE PENDING REQUEST
+   * ==========================================================
    */
-  progress.pending = {
-    levelId: currentLevel.id,
 
-    requestedAt: new Date(),
+  progress.pending = {
+    levelId:
+      currentLevel.id,
+
+    folder:
+      normalizePath(
+        player.cwd
+      ),
+
+    requestedAt:
+      new Date(),
 
     cost,
 
-    hintNumber: used + 1
+    hintNumber
   };
+
+  /*
+   * ==========================================================
+   * SHOW CONFIRMATION
+   * ==========================================================
+   */
 
   output.push(
     '========== HINT REQUEST =========='
@@ -613,14 +1022,26 @@ function handleHintCommand(
   );
 
   output.push(
-    `HINT: ${used + 1}/${MAX_HINTS}`
+    `LOCATION: ${normalizePath(player.cwd)}`
   );
 
   output.push(
-    `HINTS REMAINING: ${MAX_HINTS - used}`
+    `HINT: ${hintNumber}/${MAX_HINTS}`
+  );
+
+  output.push(
+    `HINTS REMAINING THIS LEVEL: ${
+      MAX_HINTS - levelHintCount
+    }`
   );
 
   output.push('');
+
+  output.push(
+    `LEVEL POINTS: ${
+      Number(currentLevel.points) || 0
+    }`
+  );
 
   output.push(
     `CURRENT SCORE: ${score}`
@@ -631,12 +1052,18 @@ function handleHintCommand(
   );
 
   output.push(
-    `SCORE AFTER USE: ${score >= cost ? score - cost : 'INSUFFICIENT POINTS'}`
+    `SCORE AFTER USE: ${
+      score >= cost
+        ? score - cost
+        : 'INSUFFICIENT POINTS'
+    }`
   );
 
   output.push('');
 
-  if (score < cost) {
+  if (
+    score < cost
+  ) {
     output.push(
       `You need ${cost - score} more points to use this hint.`
     );
@@ -659,18 +1086,19 @@ function handleHintCommand(
   );
 }
 
-/**
- * Executes one raw command string.
- *
- * Mutates player in place and returns:
- *
- * {
- *   output: string[],
- *   events: string[]
- * }
+/*
+ * ============================================================
+ * MAIN COMMAND ENGINE
+ * ============================================================
  */
-function runCommand(player, rawInput) {
-  ensureCwdValid(player);
+
+function runCommand(
+  player,
+  rawInput
+) {
+  ensureCwdValid(
+    player
+  );
 
   const input =
     (rawInput || '').trim();
@@ -695,11 +1123,22 @@ function runCommand(player, rawInput) {
   const args =
     tokens.slice(1);
 
+  /*
+   * ==========================================================
+   * COMMAND ACCESS CONTROL
+   * ==========================================================
+   */
+
   if (
     !BASE_COMMANDS.includes(cmd) &&
-    !isCommandUnlocked(player, cmd)
+    !isCommandUnlocked(
+      player,
+      cmd
+    )
   ) {
-    if (commandDef(cmd)) {
+    if (
+      commandDef(cmd)
+    ) {
       output.push(
         `${cmd}: command not found. This tool hasn't been discovered yet.`
       );
@@ -721,21 +1160,32 @@ function runCommand(player, rawInput) {
       player.unlockedKeys
     );
 
+  /*
+   * ==========================================================
+   * COMMAND SWITCH
+   * ==========================================================
+   */
+
   switch (cmd) {
+
     case 'help': {
+
       output.push(
         'AVAILABLE COMMANDS'
       );
 
       for (
-        const name of player.unlockedCommands
+        const name of
+        player.unlockedCommands
       ) {
         const def =
           commandDef(name);
 
         output.push(
           `  ${name.padEnd(8)} - ${
-            def ? def.description : ''
+            def
+              ? def.description
+              : ''
           }`
         );
       }
@@ -744,14 +1194,18 @@ function runCommand(player, rawInput) {
     }
 
     case 'pwd': {
+
       output.push(
-        pathToString(player.cwd)
+        pathToString(
+          player.cwd
+        )
       );
 
       break;
     }
 
     case 'ls': {
+
       output.push(
         ...listing(
           currentFolder,
@@ -763,7 +1217,10 @@ function runCommand(player, rawInput) {
     }
 
     case 'cd': {
-      if (args.length === 0) {
+
+      if (
+        args.length === 0
+      ) {
         player.cwd = [];
 
         break;
@@ -782,8 +1239,12 @@ function runCommand(player, rawInput) {
         );
 
       if (!targetFolder) {
+
         const parentSegs =
-          targetSegs.slice(0, -1);
+          targetSegs.slice(
+            0,
+            -1
+          );
 
         const name =
           targetSegs[
@@ -816,15 +1277,22 @@ function runCommand(player, rawInput) {
             `No such directory: ${args[0]}`
           );
         }
+
       } else {
-        player.cwd = targetSegs;
+
+        player.cwd =
+          targetSegs;
+
       }
 
       break;
     }
 
     case 'cat': {
-      if (args.length === 0) {
+
+      if (
+        args.length === 0
+      ) {
         output.push(
           'Usage: cat <file>'
         );
@@ -855,7 +1323,10 @@ function runCommand(player, rawInput) {
     }
 
     case 'grep': {
-      if (args.length < 2) {
+
+      if (
+        args.length < 2
+      ) {
         output.push(
           'Usage: grep "<pattern>" <file>'
         );
@@ -893,12 +1364,13 @@ function runCommand(player, rawInput) {
       const matches =
         text
           .split('\n')
-          .filter((line) =>
-            line
-              .toLowerCase()
-              .includes(
-                pattern.toLowerCase()
-              )
+          .filter(
+            (line) =>
+              line
+                .toLowerCase()
+                .includes(
+                  pattern.toLowerCase()
+                )
           );
 
       output.push(
@@ -915,7 +1387,10 @@ function runCommand(player, rawInput) {
     }
 
     case 'head': {
-      if (args.length === 0) {
+
+      if (
+        args.length === 0
+      ) {
         output.push(
           'Usage: head <file> [lines]'
         );
@@ -930,7 +1405,10 @@ function runCommand(player, rawInput) {
         args[1]
           ? Math.max(
               1,
-              parseInt(args[1], 10) || 10
+              parseInt(
+                args[1],
+                10
+              ) || 10
             )
           : 10;
 
@@ -958,13 +1436,17 @@ function runCommand(player, rawInput) {
       output.push(
         ...text
           .split('\n')
-          .slice(0, n)
+          .slice(
+            0,
+            n
+          )
       );
 
       break;
     }
 
     case 'clear': {
+
       events.push(
         'CLEAR_SCREEN'
       );
@@ -973,22 +1455,29 @@ function runCommand(player, rawInput) {
     }
 
     case 'hint': {
+
       handleHintCommand(
         player,
         args,
         output
       );
 
-      player.markModified &&
+      if (
+        player.markModified
+      ) {
         player.markModified(
           'hintProgress'
         );
+      }
 
       break;
     }
 
     case 'unlock': {
-      if (args.length === 0) {
+
+      if (
+        args.length === 0
+      ) {
         output.push(
           'Usage: unlock <code>'
         );
@@ -1042,18 +1531,23 @@ function runCommand(player, rawInput) {
         'ACCESS KEY ACCEPTED.'
       );
 
-      if (newFolders.length > 0) {
+      if (
+        newFolders.length > 0
+      ) {
         output.push(
           `${newFolders.length} director${
             newFolders.length === 1
               ? 'y'
               : 'ies'
-          } unlocked: ${newFolders.join(', ')}`
+          } unlocked: ${newFolders.join(
+            ', '
+          )}`
         );
       }
 
       for (
-        const cName of newCommands
+        const cName of
+        newCommands
       ) {
         if (
           !player.unlockedCommands.includes(
@@ -1101,7 +1595,9 @@ function runCommand(player, rawInput) {
           `LEVEL_COMPLETE:${level.id}`
         );
 
-        if (level.completesGame) {
+        if (
+          level.completesGame
+        ) {
           player.completedAt =
             new Date();
 
@@ -1129,9 +1625,12 @@ function runCommand(player, rawInput) {
     }
 
     default: {
+
       output.push(
         `${cmd}: command not found. Type 'help' to see what's available.`
       );
+
+      break;
     }
   }
 
@@ -1140,6 +1639,12 @@ function runCommand(player, rawInput) {
     events
   };
 }
+
+/*
+ * ============================================================
+ * EXPORTS
+ * ============================================================
+ */
 
 module.exports = {
   runCommand,
