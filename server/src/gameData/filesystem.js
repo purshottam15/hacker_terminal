@@ -316,10 +316,10 @@ RECOVERY FRAGMENT:
 Decode the fragment using the operator's instruction
 and use the recovered value to clear the personnel flag.`
         },
-        {
-          type: 'file',
-          name: 'internal_review.txt',
-          content:
+       {
+  type: 'file',
+  name: 'internal_review.txt',
+  content:
 `INTERNAL REVIEW // FINAL ENTRY
 ------------------------------
 
@@ -331,6 +331,9 @@ investigation.
 Six recovery attempts failed before the operator
 sealed the system.
 
+No additional recovery attempts were made after
+the final failure.
+
 The archive was sealed on the second day of the
 final incident.
 
@@ -339,14 +342,19 @@ A note was found underneath the terminal:
     "Room first.
      Then how much marked.
      Then how much failed.
+     Then how much happened after the final failure.
      Then when it was sealed."
 
     "Join them exactly as written."
 
 No access key was recorded anywhere in this report.
 
-The access key has the format: two letters, followed by four digits. Preserve the XX-XXXX structure.`
-        },
+The access key has the format:
+
+    XX-XXXX
+
+Preserve the order of the values.`
+},
         {
           type: 'folder',
           name: 'logs',

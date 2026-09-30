@@ -70,6 +70,7 @@ function clearFailures(rollNo, ip) {
 
 router.post('/login', loginLimiter, async (req, res, next) => {
   try {
+    console.log("hello")
     const startedAt = Date.now();
 
     const now = new Date();

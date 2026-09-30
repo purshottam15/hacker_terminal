@@ -18,7 +18,7 @@ module.exports = {
   NODE_ENV,
   isProduction,
   PORT: process.env.PORT || 4000,
-  MONGODB_URI: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/hackers-terminal',
+  MONGODB_URI: process.env.MONGODB_URI,
   FRONTEND_URL: process.env.FRONTEND_URL || process.env.CLIENT_ORIGIN || 'http://localhost:5173',
   SESSION_SECRET: process.env.SESSION_SECRET || 'dev-only-change-me',
   SESSION_COOKIE_NAME: process.env.SESSION_COOKIE_NAME || 'ht_session',
