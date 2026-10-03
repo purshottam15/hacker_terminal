@@ -13,8 +13,8 @@ import LoginPage from './pages/LoginPage.jsx';
 import GamePage from './pages/GamePage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
 
-import ProtectedRoute from './Routes/ProtectedRoute.jsx';
-import AdminRoute from './Routes/AdminRoute.jsx';
+import ProtectedRoute from './routes/ProtectedRoute.jsx';
+import AdminRoute from './routes/AdminRoute.jsx';
 
 // import './style/landing.css';
 import './styles.css';
